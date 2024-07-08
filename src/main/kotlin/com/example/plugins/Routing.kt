@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 
 import java.io.File
 
+
 fun Application.configureRouting() {
     routing {
         get("/") {
@@ -27,13 +28,15 @@ fun Application.configureRouting() {
                     is PartData.FormItem -> {
                         if (part.name == "description") {
                             fileDescription = part.value
-                            
+
                         }
                     }
+
                     is PartData.FileItem -> {
                         fileName = part.originalFileName
                         fileBytes = part.streamProvider().readBytes()
                     }
+
                     else -> {}
                 }
                 part.dispose()
@@ -43,13 +46,57 @@ fun Application.configureRouting() {
                 val file = File("uploads/$fileName")
                 file.parentFile.mkdirs()
                 file.writeBytes(fileBytes!!)
-                call.respondText("File uploaded successfully: $fileDescription")
+                //call.respondText("File uploaded successfully: $fileName")
+                //FILE DOWNLOAD
+//                call.response.header(
+//                    HttpHeaders.ContentDisposition,
+//                    ContentDisposition.Attachment.withParameter(
+//                        ContentDisposition.Parameters.FileName,fileName.toString()
+//                    ).toString()
+//                )
+//                call.respondText("File Downloading")
+                //FILE DOWNLOAD
+
+                //FILE OPEN
+//                call.response.header(
+//                    HttpHeaders.ContentDisposition,
+//                    ContentDisposition.Inline.withParameter(
+//                        ContentDisposition.Parameters.FileName, fileName.toString()
+//                    ).toString()
+//                )
+                //call.respondFile(file)
+                //call.respondText(file.path)
+                //FILE OPEN
+
+                //RETURN IMAGE LINK
+                call.response.header(
+                    HttpHeaders.ContentDisposition,
+                    ContentDisposition.Inline.withParameter(
+                        ContentDisposition.Parameters.FileName, fileName.toString()
+                    ).toString()
+                )
+                call.respondText("http://0.0.0.0:8080/getimage/$fileName")
+
             } else {
                 call.respondText("File upload failed")
             }
         }
 
 
+        get("/getimage/{imagename}") {
+
+            val imagename=call.parameters["imagename"]
+            call.response.header(
+                HttpHeaders.ContentDisposition,
+                ContentDisposition.Inline.withParameter(
+                    ContentDisposition.Parameters.FileName, imagename.toString()
+                ).toString()
+            )
+
+            val file = File("uploads/$imagename")
+            call.respondFile(file)
+
+        }
 
 
 //        post("/upload") { _ ->
@@ -75,9 +122,6 @@ fun Application.configureRouting() {
 //                part.dispose()
 //            }
 //        }
-
-
-
 
 
 //        post("/add-image") {
@@ -107,8 +151,6 @@ fun Application.configureRouting() {
 //                call.respond(HttpStatusCode.InternalServerError,"Error")
 //            }
 //        }
-
-
 
 
         /*
